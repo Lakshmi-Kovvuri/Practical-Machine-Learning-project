@@ -2,8 +2,12 @@
 Coursera project in Practical machine learning
 Over view:
 Using devices such as Fitbit, Nike FuelBand and so on, is now easily possible to collect data about physical activity. These type of devices are part of the quantified self movement. A group of enthusiasts who take measurements about themselves regularly to improve their health and to find patterns in their behaviour.
-The goal of this project is to use data from accelerometers on the belt, forearm, arm and dumbell of 6 participants. And also to predict the manner in which they did the exercise.
+
+The goal of this project is to use data from accelerometers on the belt, forearm, arm and dumbell of 6 participants.
+And also to predict the manner in which they did the exercise.
+
 The 5 possible methods include:
+
 A: Exactly according to the specification
 B: Throwing the elbows to the front
 C: Lifting the dumbell only halfway
