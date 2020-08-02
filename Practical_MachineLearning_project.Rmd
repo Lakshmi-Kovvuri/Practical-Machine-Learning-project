@@ -1,0 +1,228 @@
+---
+title: "Practical Machine Learning - project"
+author: "Lakshmi Kovvuri"
+date: "8/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Over view:
+
+## Using devices such as Fitbit, Nike FuelBand and so on, is now easily possible to collect data about physical activity. These type of devices are part of the quantified self movement. A group of enthusiasts who take measurements about themselves regularly to improve their health and to find patterns in their behaviour.
+
+## The goal of this project is to use data from accelerometers on the belt, forearm, arm and dumbell of 6 participants. And also to predict the manner in which they did the exercise. 
+
+## The 5 possible methods include:
+
+##  A: Exactly according to the specification
+##  B: Throwing the elbows to the front
+##  C: Lifting the dumbell only halfway
+##  D: Lowering the dumbell only halfway
+##  E: Throwing the hips to the front
+
+## The dataset used in this project is a courtesy of Ugulino, W.;Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers, Data Classification of Body Postures and Movements.
+
+# Required Libraries for this project
+
+```{r}
+library(knitr)
+library(caret)
+library(corrplot)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(randomForest)
+library(e1071)
+```
+
+# Data Processing
+
+# Getting data
+
+```{r}
+trainURL<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+
+testURL<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+```
+
+# Reading data
+
+```{r}
+
+training<-read.csv(trainURL)
+
+testing<-read.csv(testURL)
+
+# Data Analysis
+
+dim(training)
+
+dim(testing)
+
+##( I used hashtags before the 'names' and 'str' code here, bcz of the lengthy data it is occupying more space)
+
+## names(training)
+
+## str(training)
+```
+
+# Data Slicing
+
+```{r}
+inTrain<-createDataPartition(training$classe, p=0.7, list=FALSE)
+
+trainSet<-training[inTrain,]
+
+testSet<-training[-inTrain,]
+
+dim(trainSet)
+
+dim(testSet)
+```
+
+# Data cleaning
+
+```{r}
+## In data cleaning, first, remove the NA values from the data set
+
+trainSet1<-trainSet[ , colSums(is.na(trainSet))==0]
+
+testSet1<-testSet[ , colSums(is.na(testSet))==0]
+
+dim(trainSet1)
+
+dim(testSet1)
+```
+
+```{r}
+## In data cleaning, second, remove the columns that have near zero variance
+
+nearZero<-nearZeroVar(trainSet1)
+
+trainSet2<-trainSet1[ , -nearZero]
+
+testSet2<-testSet1[ , -nearZero]
+
+dim(trainSet2)
+
+dim(testSet2)
+```
+
+```{r}
+
+## In data cleaning, finally, remove the first seven variables which are having less impact on the outcome variable
+
+trainSet3<- trainSet2[ , -c(1:7)]
+
+testSet3<-testSet2[ , -c(1:7)]
+
+dim(trainSet3)
+
+dim(testSet3)
+```
+
+# Correlation analysis
+
+```{r}
+## Checking the highly correlated variables prior to modelling
+
+trainD<-sapply(trainSet3, is.numeric)
+
+corMatrix<-cor(trainSet3[trainD])
+
+corrplot(corMatrix, order="FPC", method="color",
+           tl.cex=0.45, tl.col="blue", number.cex=0.25)
+```
+
+## Names of highly correlated variables, which are shown as dark color intersection in corrplot.
+
+```{r}
+highCor<-findCorrelation(corMatrix, cutoff=0.75)
+
+names(trainSet3)[highCor]
+```
+
+# Prediction model building
+
+# Here, we are using two models to predict the outcome variable.
+
+## 1. Decision tree model
+## 2. Random Forest model
+
+## In order to limit the effects of overfitting and improve the efficiency of the models, we will use Cross Validation.
+
+## Also we use Confusion Matrix for each analysis to better visualize the accuracy of the models.
+
+# Method1: Decision trees
+
+```{r}
+## Model fit
+
+DTcontrol<-trainControl(method="cv", number=5)
+
+DTmodel<-train(classe~., data=trainSet3, 
+               method=  "rpart", trControl=DTcontrol)
+
+fancyRpartPlot(DTmodel$finalModel,
+               sub="Classification Tree")
+```
+
+## Prediction on test data set
+```{r}
+DTpred<-predict(DTmodel, newdata=testSet3)
+
+DTcfm<-confusionMatrix(table(DTpred,testSet3$classe))
+
+DTcfm
+```
+
+## plot matrix results
+```{r}
+plot(DTcfm$table, col=DTcfm$byClass, 
+      main=paste("Decision Tree Accuracy = ",   round(DTcfm$overall['Accuracy'], digits=2),4))
+```
+
+## In Decision tree model's accuracy, there is a significant expected 'out of sample error'.
+
+# Method2: Random Forest
+
+```{r}
+## Model fit
+
+RFmodel<-randomForest(as.factor(classe)~.,
+        data=trainSet3, ntree=500, importance=TRUE)
+
+RFmodel
+```
+
+## Prediction on test data set
+
+```{r}
+
+RFpred<-predict(RFmodel, newdata=testSet3)
+
+RFcfm<-confusionMatrix(table(RFpred, testSet3$classe))
+
+RFcfm
+```
+
+## plot matrix results
+```{r}
+
+plot(RFcfm$table, col=RFcfm$byClass, 
+      main=paste("Random Forest Accuracy = ", round(RFcfm$overall['Accuracy'], digits=2),4))
+```
+
+## Accuracy rate for the Random forest model is very high and the out of sample error is equals to zero
+
+
+# Applying Random forest model to the test data
+```{r}
+finalPredict<-predict(RFmodel, newdata=testing)
+
+finalPredict
+```
+
