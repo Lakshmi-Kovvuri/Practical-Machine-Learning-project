@@ -9,10 +9,15 @@ And also to predict the manner in which they did the exercise.
 The 5 possible methods include:
 
 A: Exactly according to the specification
+
 B: Throwing the elbows to the front
+
 C: Lifting the dumbell only halfway
+
 D: Lowering the dumbell only halfway
+
 E: Throwing the hips to the front
+
 The dataset used in this project is a courtesy of Ugulino, W.;Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers, Data Classification of Body Postures and Movements.
 
 Data obtained from the following links
